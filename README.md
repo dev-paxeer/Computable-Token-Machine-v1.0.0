@@ -49,8 +49,11 @@ This tutorial will guide you through deploying your own Computable Token Machine
 
 ### Step 1: Set Up Your Environment
 
-Clone the official CTM repository, which includes the core contracts and a Hardhat environment.
+Clone the official CTM repository or install via npm, which includes the core contracts and a Hardhat environment.
 
+``` bash
+npm i @paxeer-foundation/computable-token-machine
+```
 ```bash
 # Clone the repository
 git clone https://github.com/dev-paxeer/Computable-Token-Machine-v1.0.0
