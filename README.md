@@ -53,7 +53,7 @@ Clone the official CTM repository, which includes the core contracts and a Hardh
 
 ```bash
 # Clone the repository
-git clone https://github.com/Paxeer-Network/Computable-Token-Machine-ERC.git
+git clone https://github.com/dev-paxeer/Computable-Token-Machine-v1.0.0
 cd ctm-hardhat-template
 
 # Install dependencies
