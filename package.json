@@ -1,5 +1,5 @@
 {
-  "name": "@paxeer/computable-token-machine",
+  "name": "@paxeer-foundation/computable-token-machine",
   "version": "1.0.0",
   "description": "The official package for the Computable Token Machine (CTM) standard.",
   "main": "index.js",
