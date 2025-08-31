@@ -54,7 +54,7 @@ Clone the official CTM repository, which includes the core contracts and a Hardh
 ```bash
 # Clone the repository
 git clone https://github.com/dev-paxeer/Computable-Token-Machine-v1.0.0
-cd ctm-hardhat-template
+cd Computable-Token-Machine-v1.0.0
 
 # Install dependencies
 npm install
