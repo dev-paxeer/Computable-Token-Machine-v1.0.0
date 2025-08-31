@@ -1,0 +1,24 @@
+{
+  "name": "@paxeer/computable-token-machine",
+  "version": "1.0.0",
+  "description": "The official package for the Computable Token Machine (CTM) standard.",
+  "main": "index.js",
+  "files": [
+    "/contracts",
+    "/artifacts",
+    "index.js"
+  ],
+  "author": "Paxeer-Network",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Paxeer-Network/Computable-Token-Machine-ERC.git"
+  },
+  "keywords": [
+    "blockchain",
+    "solidity",
+    "diamond",
+    "eip-2535",
+    "ctm"
+  ]
+}
