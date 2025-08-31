@@ -1,3 +1,8 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![NPM Version](https://img.shields.io/npm/v/@paxeer-foundation/computable-token-machine.svg)](https://www.npmjs.com/package/@paxeer-foundation/computable-token-machine)
+[![Discord](https://img.shields.io/discord/paxeer_app?logo=discord&label=Discord)](https://discord.gg/YOUR_INVITE_CODE)
+[![Twitter Follow](https://img.shields.io/twitter/follow/paxeer_app?style=social)](https://twitter.com/paxeer_app)
+
 ##  1. Introduction: Meet the Computable Token Machine (CTM)
 
 **Headline: Beyond Value, Beyond Utility. Tokens That Think.**
@@ -145,11 +150,10 @@ To add a new Program, you call the `diamondCut` function on your CTM. This funct
   * **Storage Layout**: Always define your Program's state inside a `struct` and store it at a unique storage slot derived from a `keccak256` hash. Never use standard global state variables.
   * **Access Control**: The `diamondCut` function is extremely powerful. Ensure it is protected by robust ownership or governance control, typically managed by the `OwnershipFacet`.
   * **Stateless Logic**: Remember that Programs are logic contracts. They should not hold funds or have constructors that set state. All state is managed within the CTM's central storage.
-
 -----
 
 ##  6. Resources
 
-  * **Full Source Code**: [Link to GitHub Repository]
-  * **Live Demo**: [Link to a Deployed CTM on a Testnet Explorer]
-  * **Community**: [Link to Discord/Telegram for Developer Support]
+  * **Full Source Code**: [https://github.com/dev-paxeer/Computable-Token-Machine-v1.0.0]
+  * **Live contracts**: [https://paxscan.paxeer.app/address/0x477A9f214c947e6D81b9d32b6b1883F4a4ffFb24]
+  * **Community**: [https://paxeer.app/developers]
