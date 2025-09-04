@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![NPM Version](https://img.shields.io/npm/v/@paxeer-foundation/computable-token-machine.svg)](https://www.npmjs.com/package/@paxeer-foundation/computable-token-machine)
+[![NPM Version](https://img.shields.io/npm/v/@paxeer-foundation/ctm-contracts.svg)](https://www.npmjs.com/package/@paxeer-foundation/ctm-contracts)
 [![Discord](https://img.shields.io/discord/paxeer_app?logo=discord&label=Discord)](https://discord.gg/YOUR_INVITE_CODE)
 [![Twitter Follow](https://img.shields.io/twitter/follow/paxeer_app?style=social)](https://twitter.com/paxeer_app)
 
