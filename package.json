@@ -1,6 +1,6 @@
 {
-  "name": "@paxeer-foundation/computable-token-machine",
-  "version": "2.0.0",
+  "name": "@paxeer-foundation/ctm-contracts",
+  "version": "2.1.5",
   "description": "The official package for the Computable Token Machine (CTM) standard.",
   "main": "index.js",
   "files": [
@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Paxeer-Network/Computable-Token-Machine-ERC.git"
+    "url": "https://github.com/dev-paxeer/Computable-Token-Machine-v1.0.0.git"
   },
   "keywords": [
     "blockchain",
