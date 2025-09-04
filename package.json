@@ -1,6 +1,6 @@
 {
   "name": "@paxeer-foundation/ctm-contracts",
-  "version": "2.1.5",
+  "version": "3.0.0-0",
   "description": "The official package for the Computable Token Machine (CTM) standard.",
   "main": "index.js",
   "files": [
