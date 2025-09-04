@@ -1,19 +1,11 @@
-// File: contracts/facets/TokenFacet.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../libraries/LibDex.sol";
 
-/**
- * @title TokenFacet
- * @author Paxeer-Foundation
- * @notice Implements the standard ERC20 interface for the tradable PXL token.
- */
 contract TokenFacet is IERC20 {
 
-    // --- VIEW FUNCTIONS ---
-    
     function name() external view returns (string memory) {
         return LibDex.dexStorage().tokenName;
     }
@@ -23,7 +15,7 @@ contract TokenFacet is IERC20 {
     }
 
     function decimals() external pure returns (uint8) {
-        return 18;
+        return 6;
     }
 
     function totalSupply() external view override returns (uint256) {
@@ -37,8 +29,6 @@ contract TokenFacet is IERC20 {
     function allowance(address owner, address spender) external view override returns (uint256) {
         return LibDex.dexStorage().tokenAllowances[owner][spender];
     }
-    
-    // --- STATE-CHANGING FUNCTIONS ---
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();

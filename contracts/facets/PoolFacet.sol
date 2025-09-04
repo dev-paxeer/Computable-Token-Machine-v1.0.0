@@ -1,146 +1,93 @@
-// File: contracts/facets/PoolFacet.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../libraries/LibDex.sol";
+import "./StatsFacet.sol";
+import "./TokenFacet.sol";
 
 contract PoolFacet {
-
-    // --- Events ---
-    event Swap(address indexed user, uint amountIn, uint amountOut, address indexed tokenIn);
-    event LiquidityAdded(address indexed user, uint lpMinted, uint usdcAmount);
-    event LiquidityRemoved(address indexed user, uint lpBurned, uint pxlAmount, uint usdcAmount);
-
-    // --- Internal Mint/Burn Functions ---
-
-    function _mintPXL(address _to, uint256 _amount) internal {
-        LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        ds_.tokenTotalSupply += _amount;
-        ds_.tokenBalances[_to] += _amount;
-        emit IERC20.Transfer(address(0), _to, _amount);
-    }
-    
-    function _burnPXL(address _from, uint256 _amount) internal {
-        LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        uint256 fromBalance = ds_.tokenBalances[_from];
-        require(fromBalance >= _amount, "PXL: burn amount exceeds balance");
-        ds_.tokenBalances[_from] = fromBalance - _amount;
-        ds_.tokenTotalSupply -= _amount;
-        emit IERC20.Transfer(_from, address(0), _amount);
-    }
+    event LiquidityAdded(address indexed user, uint256 lpMinted, uint256 tokenAmount, uint256 usdcAmount);
+    event LiquidityRemoved(address indexed user, uint256 lpBurned, uint256 tokenAmount, uint256 usdcAmount);
+    event Swap(address indexed user, uint256 amountIn, uint256 amountOut, address indexed tokenIn);
 
     function _mintLP(address _to, uint256 _amount) internal {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();
         ds_.lpTotalSupply += _amount;
         ds_.lpBalances[_to] += _amount;
+        emit IERC20.Transfer(address(0), _to, _amount);
     }
-    
     function _burnLP(address _from, uint256 _amount) internal {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();
         uint256 fromBalance = ds_.lpBalances[_from];
         require(fromBalance >= _amount, "LP: burn amount exceeds balance");
         ds_.lpBalances[_from] = fromBalance - _amount;
         ds_.lpTotalSupply -= _amount;
+        emit IERC20.Transfer(_from, address(0), _amount);
     }
 
-    // --- View Functions ---
-
-    function getReserves() public view returns (uint reservePXL, uint reserveUSDC) {
+    function addLiquidity(uint256 tokenAmount, uint256 usdcAmount) external {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        reservePXL = ds_.tokenBalances[address(this)];
-        if (address(ds_.usdcToken) != address(0)) {
-            reserveUSDC = ds_.usdcToken.balanceOf(address(this));
-        }
-    }
-    
-    function getPXLPrice() external view returns (uint price) {
-        (uint reservePXL, uint reserveUSDC) = getReserves();
-        if (reservePXL == 0 || reserveUSDC == 0) return 0;
-        // Price = (USDC / PXL), adjusted for decimals (18 for PXL, 6 for USDC)
-        return (reserveUSDC * 1e18) / (reservePXL / 1e12);
-    }
-    
-    function lpBalanceOf(address account) external view returns (uint256) {
-        return LibDex.dexStorage().lpBalances[account];
-    }
-
-    // --- Liquidity & Swapping Functions ---
-
-    function addLiquidity(uint usdcAmount) external {
-        LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        uint lpToMint;
+        
+        TokenFacet(address(this)).transferFrom(msg.sender, address(this), tokenAmount);
+        ds_.usdcToken.transferFrom(msg.sender, address(this), usdcAmount);
+        
+        (uint256 reserveTokenBefore, uint256 reserveUSDCBefore) = StatsFacet(address(this)).getReserves();
+        
+        uint256 lpToMint;
         if (ds_.lpTotalSupply == 0) {
-            // First liquidity provider
-            uint initialPXLReserve = ds_.tokenBalances[address(this)];
-            lpToMint = initialPXLReserve; // Mint LP shares 1:1 with initial PXL
+            lpToMint = 1_000_000 * (10**6); // Seed with 1M LP shares
         } else {
-            (uint reservePXL, uint reserveUSDC) = getReserves();
-            uint pxlAmount = (usdcAmount * reservePXL) / reserveUSDC;
-            require(pxlAmount > 0, "Insufficient amount");
-            // Mint PXL from treasury to match the USDC deposit
-            _mintPXL(address(this), pxlAmount); 
-            lpToMint = (usdcAmount * ds_.lpTotalSupply) / reserveUSDC;
+            uint256 lpFromToken = (tokenAmount * ds_.lpTotalSupply) / reserveTokenBefore;
+            uint256 lpFromUSDC = (usdcAmount * ds_.lpTotalSupply) / reserveUSDCBefore;
+            lpToMint = lpFromToken < lpFromUSDC ? lpFromToken : lpFromUSDC;
         }
         
-        require(lpToMint > 0, "Must mint LP shares");
+        require(lpToMint > 0, "Insufficient liquidity minted");
         _mintLP(msg.sender, lpToMint);
-        require(ds_.usdcToken.transferFrom(msg.sender, address(this), usdcAmount), "USDC transfer failed");
-        emit LiquidityAdded(msg.sender, lpToMint, usdcAmount);
+        
+        StatsFacet(address(this))._update(0);
+        emit LiquidityAdded(msg.sender, lpToMint, tokenAmount, usdcAmount);
     }
 
-    function removeLiquidity(uint lpAmount) external {
+    function removeLiquidity(uint256 lpAmount) external {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        (uint reservePXL, uint reserveUSDC) = getReserves();
+        (uint256 reserveToken, uint256 reserveUSDC) = StatsFacet(address(this)).getReserves();
         
-        uint pxlToSend = (lpAmount * reservePXL) / ds_.lpTotalSupply;
-        uint usdcToSend = (lpAmount * reserveUSDC) / ds_.lpTotalSupply;
+        uint256 tokenToSend = (lpAmount * reserveToken) / ds_.lpTotalSupply;
+        uint256 usdcToSend = (lpAmount * reserveUSDC) / ds_.lpTotalSupply;
         
         _burnLP(msg.sender, lpAmount);
-        _burnPXL(address(this), pxlToSend); // Burn the PXL from the pool
         
-        require(ds_.usdcToken.transfer(msg.sender, usdcToSend), "USDC transfer failed");
-        emit LiquidityRemoved(msg.sender, lpAmount, pxlToSend, usdcToSend);
+        // Use the TokenFacet to transfer the token from the contract to the user
+        TokenFacet(address(this)).transfer(msg.sender, tokenToSend);
+        require(ds_.usdcToken.transfer(msg.sender, usdcToSend));
+        
+        StatsFacet(address(this))._update(0);
+        emit LiquidityRemoved(msg.sender, lpAmount, tokenToSend, usdcToSend);
     }
 
-    function swap(uint amountIn, address tokenIn) external {
+    function swap(uint256 amountIn, address tokenIn) external {
         LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        (uint reservePXL, uint reserveUSDC) = getReserves();
-        uint amountOut;
+        (uint256 reserveToken, uint256 reserveUSDC) = StatsFacet(address(this)).getReserves();
+        uint256 amountOut;
+        uint256 usdcVolume;
         
-        if (tokenIn == address(ds_.usdcToken)) { // USDC -> PXL
-            require(ds_.usdcToken.transferFrom(msg.sender, address(this), amountIn), "USDC transfer failed");
-            uint amountInWithFee = amountIn * 997; // 0.3% fee
-            amountOut = (amountInWithFee * reservePXL) / ((reserveUSDC * 1000) + amountInWithFee);
-            _burnPXL(address(this), amountOut); // Burn from pool, send to user
-            ds_.tokenBalances[msg.sender] += amountOut; 
-        } else { // PXL -> USDC
-            ds_.tokenBalances[msg.sender] -= amountIn;
-            _mintPXL(address(this), amountIn); // User sends to pool
-            uint amountInWithFee = amountIn * 997;
-            amountOut = (amountInWithFee * reserveUSDC) / ((reservePXL * 1000) + amountInWithFee);
-            require(ds_.usdcToken.transfer(msg.sender, amountOut), "USDC transfer failed");
+        if (tokenIn == address(ds_.usdcToken)) { // USDC -> Tradable Token
+            usdcVolume = amountIn;
+            require(ds_.usdcToken.transferFrom(msg.sender, address(this), amountIn));
+            uint256 amountInWithFee = amountIn * 997;
+            amountOut = (amountInWithFee * reserveToken) / ((reserveUSDC * 1000) + amountInWithFee);
+            TokenFacet(address(this)).transfer(msg.sender, amountOut);
+        } else { // Tradable Token -> USDC
+            TokenFacet(address(this)).transferFrom(msg.sender, address(this), amountIn);
+            uint256 amountInWithFee = amountIn * 997;
+            amountOut = (amountInWithFee * reserveUSDC) / ((reserveToken * 1000) + amountInWithFee);
+            usdcVolume = amountOut;
+            require(ds_.usdcToken.transfer(msg.sender, amountOut));
         }
-        emit Swap(msg.sender, amountIn, amountOut, tokenIn);
-    }
 
-    // --- Initializer ---
-    function init(
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        uint256 _initialTokenSupply,
-        address _usdcAddress
-    ) external {
-        LibDex.DexStorage storage ds_ = LibDex.dexStorage();
-        require(!ds_.initialized, "Already initialized");
-        
-        ds_.tokenName = _tokenName;
-        ds_.tokenSymbol = _tokenSymbol;
-        ds_.usdcToken = IERC20(_usdcAddress);
-        
-        // Mint the initial supply of PXL tokens to the contract itself to seed the pool
-        _mintPXL(address(this), _initialTokenSupply);
-        
-        ds_.initialized = true;
+        StatsFacet(address(this))._update(usdcVolume);
+        emit Swap(msg.sender, amountIn, amountOut, tokenIn);
     }
 }
