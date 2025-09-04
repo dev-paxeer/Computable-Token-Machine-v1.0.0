@@ -52,7 +52,7 @@ This tutorial will guide you through deploying your own Computable Token Machine
 Clone the official CTM repository or install via npm, which includes the core contracts and a Hardhat environment.
 
 ``` bash
-npm i @paxeer-foundation/computable-token-machine
+npm i @paxeer-foundation/ctm-contracts
 ```
 ```bash
 # Clone the repository
